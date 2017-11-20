@@ -8,11 +8,11 @@ import {omit} from 'ramda';
 export default class Slider extends Component {
     constructor(props) {
         super(props);
-        this.state = {value: props.value};
+        this.state = {value: props.value, drag_value: props.drag_value};
     }
 
     componentWillReceiveProps(newProps) {
-        this.setState({value: newProps.value});
+        this.setState({value: newProps.value, drag_value: newProps.drag_value});
     }
 
     render() {
@@ -21,20 +21,25 @@ export default class Slider extends Component {
         return (
             <ReactSlider
                 onChange={value => {
-                    this.setState({value});
+                    this.setState({value, drag_value});
                     if (updatemode === 'drag') {
                         if (setProps) setProps({value});
                         if (fireEvent) fireEvent('change');
                     }
+                    if (updatemode === 'hybrid') {
+                        if (setProps) setProps({drag_value});
+                        if (fireEvent) fireEvent('change');
+                    }
                 }}
                 onAfterChange={value => {
-                    if (updatemode === 'mouseup') {
+                    if (updatemode === 'mouseup' | updatemode === 'hybrid') {
                         if (setProps) setProps({value});
                         if (fireEvent) fireEvent('change');
                     }
                 }}
                 value={value}
-                {...omit(['fireEvent', 'setProps', 'updatemode', 'value'], this.props)}
+                drag_value={drag_value}
+                {...omit(['fireEvent', 'setProps', 'updatemode', 'value', 'drag_value'], this.props)}
             />
         );
     }
@@ -72,6 +77,11 @@ Slider.propTypes = {
      * The value of the input
      */
     value: PropTypes.number,
+
+    /**
+     * The drag value of the input
+     */
+    drag_value: PropTypes.number,
 
     /**
      * Additional CSS class for the root DOM node
@@ -125,7 +135,7 @@ Slider.propTypes = {
      * as it is being dragged.
      * Only use `drag` if your updates are fast.
      */
-    updatemode: PropTypes.oneOf(['mouseup', 'drag']),
+    updatemode: PropTypes.oneOf(['mouseup', 'drag', 'hybrid']),
 
     /**
      * Dash-assigned callback that gets fired when the checkbox item gets selected.
